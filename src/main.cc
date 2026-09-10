@@ -1,8 +1,11 @@
 #include <drogon/drogon.h>
+
 #include "controllers/ProductController.h"
+#include "controllers/WarehouseController.h"
 
 int main()
 {
+    // Load server and database configuration
     drogon::app().loadConfigFile("../config/config.json");
 
     // Health check
@@ -11,45 +14,50 @@ int main()
         [](const drogon::HttpRequestPtr&,
            std::function<void(const drogon::HttpResponsePtr&)>&& callback)
         {
-            Json::Value response;
-            response["status"] = "ok";
+            Json::Value responseJson;
+            responseJson["status"] = "ok";
 
-            auto resp =
-                drogon::HttpResponse::newHttpJsonResponse(response);
+            auto response =
+                drogon::HttpResponse::newHttpJsonResponse(responseJson);
 
-            callback(resp);
+            callback(response);
         },
         {drogon::Get}
     );
 
-    // Create product
+    // Product routes
     drogon::app().registerHandler(
         "/products",
         &ProductController::createProduct,
         {drogon::Post}
     );
 
-    //get product
     drogon::app().registerHandler(
-    "/products",
-    &ProductController::getAllProducts,
-    {drogon::Get}
+        "/products",
+        &ProductController::getAllProducts,
+        {drogon::Get}
     );
 
-    //get product by id
     drogon::app().registerHandler(
-    "/products/{id}",
-    [](const drogon::HttpRequestPtr& request,
-       std::function<void(const drogon::HttpResponsePtr&)>&& callback)
-    {
-        ProductController::getProductById(
-            request,
-            std::move(callback)
-        );
-    },
-    {drogon::Get}
-);
+        "/products/{id}",
+        &ProductController::getProductById,
+        {drogon::Get}
+    );
 
+    // Warehouse routes
+    drogon::app().registerHandler(
+        "/warehouses",
+        &WarehouseController::createWarehouse,
+        {drogon::Post}
+    );
+
+    drogon::app().registerHandler(
+        "/warehouses",
+        &WarehouseController::getAllWarehouses,
+        {drogon::Get}
+    );
+
+    // Start server
     drogon::app().run();
 
     return 0;
