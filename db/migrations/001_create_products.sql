@@ -1,0 +1,13 @@
+CREATE TABLE products (
+    id BIGSERIAL PRIMARY KEY,
+
+    sku VARCHAR(50) NOT NULL UNIQUE,
+
+    name VARCHAR(200) NOT NULL,
+
+    description TEXT,
+
+    price NUMERIC(12,2) NOT NULL CHECK (price >= 0),
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

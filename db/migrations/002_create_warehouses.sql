@@ -1,0 +1,9 @@
+CREATE TABLE warehouses (
+    id BIGSERIAL PRIMARY KEY,
+
+    name VARCHAR(200) NOT NULL,
+
+    location VARCHAR(300) NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

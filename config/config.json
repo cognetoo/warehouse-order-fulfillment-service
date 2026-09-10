@@ -1,0 +1,22 @@
+{
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 48173
+        }
+    ],
+
+    "db_clients": [
+        {
+            "name": "default",
+            "rdbms": "postgresql",
+            "host": "127.0.0.1",
+            "port": 5433,
+            "dbname": "warehouse_db",
+            "user": "warehouse_user",
+            "passwd": "warehouse_password",
+            "is_fast": false,
+            "number_of_connections": 4
+        }
+    ]
+}
