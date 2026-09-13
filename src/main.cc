@@ -2,6 +2,7 @@
 
 #include "controllers/ProductController.h"
 #include "controllers/WarehouseController.h"
+#include "controllers/InventoryController.h"
 
 int main()
 {
@@ -55,6 +56,17 @@ int main()
         "/warehouses",
         &WarehouseController::getAllWarehouses,
         {drogon::Get}
+    );
+    
+    drogon::app().registerHandler(
+    "/inventory/receive",
+    &InventoryController::receiveInventory,
+    {drogon::Post}
+    );
+    drogon::app().registerHandler(
+    "/inventory/{warehouse_id}",
+    &InventoryController::getInventory,
+    {drogon::Get}
     );
 
     // Start server

@@ -13,6 +13,9 @@ add_executable(warehouse_service
     src/repositories/ProductRepository.cc
     src/controllers/WarehouseController.cc
     src/repositories/WarehouseRepository.cc
+    src/controllers/InventoryController.cc
+    src/repositories/InventoryRepository.cc
+    src/services/InventoryService.cc
 )
 
 target_link_libraries(warehouse_service
