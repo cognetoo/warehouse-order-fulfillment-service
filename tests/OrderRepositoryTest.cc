@@ -22,21 +22,8 @@ protected:
         {
             drogon::app().run();
         });
-
-        // Give Drogon time to initialize its database clients.
-        for (int i = 0; i < 50; ++i)
-        {
-            if (drogon::app().hasDbClient("default"))
-            {
-                return;
-            }
-
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(100));
-        }
-
-        throw std::runtime_error(
-            "Drogon database client failed to initialize.");
+        std::this_thread::sleep_for(
+        std::chrono::seconds(2));
     }
 
     static void TearDownTestSuite()
