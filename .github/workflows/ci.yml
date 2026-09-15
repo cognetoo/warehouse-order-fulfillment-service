@@ -1,0 +1,169 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: warehouse_test_db
+          POSTGRES_USER: warehouse_user
+          POSTGRES_PASSWORD: warehouse_password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U warehouse_user -d warehouse_test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      # --------------------------------------------------
+      # 1. Checkout repository
+      # --------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------
+      # 2. Install system dependencies
+      # --------------------------------------------------
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            libjsoncpp-dev \
+            uuid-dev \
+            zlib1g-dev \
+            libssl-dev \
+            libpq-dev \
+            libbrotli-dev \
+            libboost-all-dev \
+            libyaml-cpp-dev \
+            postgresql-client \
+            libgtest-dev
+
+      # --------------------------------------------------
+      # 3. Build and install Drogon 1.9.13
+      # --------------------------------------------------
+      - name: Build Drogon
+        run: |
+          git clone --branch v1.9.13 --depth 1 \
+            https://github.com/drogonframework/drogon.git
+
+          cd drogon
+
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_CTL=ON \
+            -DBUILD_EXAMPLES=OFF \
+            -DBUILD_TESTING=OFF \
+            -DUSE_PG=ON
+
+          cmake --build build -j$(nproc)
+
+          sudo cmake --install build
+
+      # --------------------------------------------------
+      # 4. Wait for PostgreSQL
+      # --------------------------------------------------
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready \
+            -h 127.0.0.1 \
+            -p 5433 \
+            -U warehouse_user \
+            -d warehouse_test_db
+          do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      # --------------------------------------------------
+      # 5. Apply database migrations
+      # --------------------------------------------------
+      - name: Run database migrations
+        env:
+          PGPASSWORD: warehouse_password
+        run: |
+          for migration in db/migrations/*.sql
+          do
+            echo "Applying $migration"
+
+            psql \
+              -h 127.0.0.1 \
+              -p 5433 \
+              -U warehouse_user \
+              -d warehouse_test_db \
+              -v ON_ERROR_STOP=1 \
+              -f "$migration"
+          done
+      # --------------------------------------------------
+      # 6. Create CI test configuration
+      # --------------------------------------------------
+      - name: Create test configuration
+        run: |
+          mkdir -p tests/config
+
+          cat > tests/config/config.json <<'EOF'
+          {
+            "listeners": [
+              {
+                "address": "127.0.0.1",
+                "port": 48174
+              }
+            ],
+            "db_clients": [
+              {
+                "name": "default",
+                "rdbms": "postgresql",
+                "host": "127.0.0.1",
+                "port": 5433,
+                "dbname": "warehouse_test_db",
+                "user": "warehouse_user",
+                "passwd": "warehouse_password",
+                "is_fast": false,
+                "number_of_connections": 4
+              }
+            ]
+          }
+          EOF
+      # --------------------------------------------------
+      # 7. Build warehouse service and tests
+      # --------------------------------------------------
+      - name: Configure project
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: |
+          cmake --build build -j$(nproc)
+
+      # --------------------------------------------------
+      # 8. Run unit + repository integration tests
+      # --------------------------------------------------
+      - name: Run unit and integration tests
+        working-directory: build
+        run: |
+          ./warehouse_tests
+
+      # --------------------------------------------------
+      # 9. Run API integration tests
+      # --------------------------------------------------
+      - name: Run API integration tests
+        run: |
+          ./build/warehouse_api_tests
