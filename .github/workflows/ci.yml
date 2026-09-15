@@ -61,7 +61,7 @@ jobs:
       # --------------------------------------------------
       - name: Build Drogon
         run: |
-          git clone --branch v1.9.13 --depth 1 \
+          git clone --branch v1.9.13 --depth 1 --recurse-submodules \
             https://github.com/drogonframework/drogon.git
 
           cd drogon
