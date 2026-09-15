@@ -13,6 +13,7 @@ find_package(Drogon REQUIRED)
 
 add_executable(warehouse_service
     src/main.cc
+    src/AppRoutes.cc
 
     src/controllers/ProductController.cc
     src/repositories/ProductRepository.cc
@@ -45,7 +46,22 @@ add_executable(warehouse_tests
     tests/OrderServiceTest.cc
     tests/OrderRepositoryTest.cc
 
+    src/AppRoutes.cc
+
+    # Controllers
+    src/controllers/ProductController.cc
+    src/controllers/WarehouseController.cc
+    src/controllers/InventoryController.cc
+    src/controllers/OrderController.cc
+
+    # Services
+    src/services/InventoryService.cc
     src/services/OrderService.cc
+
+    # Repositories
+    src/repositories/ProductRepository.cc
+    src/repositories/WarehouseRepository.cc
+    src/repositories/InventoryRepository.cc
     src/repositories/OrderRepository.cc
 )
 
@@ -56,5 +72,31 @@ target_link_libraries(warehouse_tests
 )
 
 include(GoogleTest)
-
 gtest_discover_tests(warehouse_tests)
+# API integration tests
+add_executable(warehouse_api_tests
+    tests/OrderApiTest.cc
+    src/AppRoutes.cc
+
+    # Controllers
+    src/controllers/ProductController.cc
+    src/controllers/WarehouseController.cc
+    src/controllers/InventoryController.cc
+    src/controllers/OrderController.cc
+
+    # Services
+    src/services/InventoryService.cc
+    src/services/OrderService.cc
+
+    # Repositories
+    src/repositories/ProductRepository.cc
+    src/repositories/WarehouseRepository.cc
+    src/repositories/InventoryRepository.cc
+    src/repositories/OrderRepository.cc
+)
+
+target_link_libraries(warehouse_api_tests
+    PRIVATE
+    GTest::gtest_main
+    Drogon::Drogon
+)
