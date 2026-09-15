@@ -3,6 +3,7 @@
 #include "controllers/ProductController.h"
 #include "controllers/WarehouseController.h"
 #include "controllers/InventoryController.h"
+#include "controllers/OrderController.h"
 
 int main()
 {
@@ -57,7 +58,7 @@ int main()
         &WarehouseController::getAllWarehouses,
         {drogon::Get}
     );
-    
+    //Inventory routes
     drogon::app().registerHandler(
     "/inventory/receive",
     &InventoryController::receiveInventory,
@@ -66,6 +67,19 @@ int main()
     drogon::app().registerHandler(
     "/inventory/{warehouse_id}",
     &InventoryController::getInventory,
+    {drogon::Get}
+    );
+
+    //order routes
+    drogon::app().registerHandler(
+    "/orders",
+    &OrderController::createOrder,
+    {drogon::Post}
+    );
+
+    drogon::app().registerHandler(
+    "/orders/{id}",
+    &OrderController::getOrder,
     {drogon::Get}
     );
 
