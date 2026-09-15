@@ -157,9 +157,8 @@ jobs:
       # 8. Run unit + repository integration tests
       # --------------------------------------------------
       - name: Run unit and integration tests
-        working-directory: build
         run: |
-          ./warehouse_tests
+          ./build/warehouse_tests
 
       # --------------------------------------------------
       # 9. Run API integration tests
